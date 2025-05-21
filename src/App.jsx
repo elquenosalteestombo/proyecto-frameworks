@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import emailjs from 'emailjs-com';
 
 function App() {
  
@@ -14,6 +15,7 @@ function App() {
     date: "",
     time: "",
     phone: "",
+    email: "", 
   });
   const [errors, setErrors] = useState({});
   const [notification, setNotification] = useState("");
@@ -40,7 +42,7 @@ function App() {
     }
     setLoginError("");
     setIsLoggedIn(true);
-    setFormData({ ...formData, name: loginData.nombre }); // autocompleta el nombre en el formulario
+    setFormData({ ...formData, name: loginData.nombre }); 
   };
 
   
@@ -56,11 +58,17 @@ function App() {
     if (!formData.time) newErrors.time = "La hora es obligatoria.";
     if (!formData.phone.match(/^\d{10}$/))
       newErrors.phone = "El número de teléfono debe tener 10 dígitos.";
+    if (
+      !formData.email.match(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      )
+    )
+      newErrors.email = "Correo electrónico inválido.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
@@ -84,8 +92,25 @@ function App() {
     }
 
     setAppointments([...appointments, formData]);
-    setFormData({ name: loginData.nombre, date: "", time: "", phone: "" });
-    setNotification("Cita reservada con éxito.");
+    setFormData({ name: loginData.nombre, date: "", time: "", phone: "", email: "" });
+    setNotification("Cita reservada con éxito. Se enviará un correo de confirmación.");
+
+ 
+    try {
+      await emailjs.send(
+        'service_bt9aw5o', 
+        'template_bvj4x4c',
+        {
+          to_email: formData.email,
+          to_name: formData.name,
+          message: `Hola ${formData.name}, tu cita está reservada para el ${formData.date} a las ${formData.time}.`,
+        },
+        'user_Gehq9geYSivlpd7fL' 
+      );
+    } catch (error) {
+      setNotification("Cita reservada, pero ocurrió un error al enviar el correo.");
+    }
+
     setTimeout(() => setNotification(""), 3000);
   };
 
@@ -224,6 +249,18 @@ function App() {
                 required
               />
               {errors.phone && <p className="error">{errors.phone}</p>}
+            </div>
+            <div>
+              <label htmlFor="email">Correo electrónico:</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+              {errors.email && <p className="error">{errors.email}</p>}
             </div>
             <button type="submit">Reservar cita</button>
           </form>
