@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
+ 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginData, setLoginData] = useState({ cedula: "", nombre: "" });
+  const [loginError, setLoginError] = useState("");
+
+  
   const [appointments, setAppointments] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -16,6 +22,28 @@ function App() {
     console.log("Aplicación cargada");
   }, []);
 
+  
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData({ ...loginData, [name]: value });
+  };
+
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (!loginData.cedula.match(/^\d{6,}$/)) {
+      setLoginError("La cédula debe ser numérica y tener al menos 6 dígitos.");
+      return;
+    }
+    if (!loginData.nombre.trim()) {
+      setLoginError("El nombre es obligatorio.");
+      return;
+    }
+    setLoginError("");
+    setIsLoggedIn(true);
+    setFormData({ ...formData, name: loginData.nombre }); // autocompleta el nombre en el formulario
+  };
+
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -56,7 +84,7 @@ function App() {
     }
 
     setAppointments([...appointments, formData]);
-    setFormData({ name: "", date: "", time: "", phone: "" });
+    setFormData({ name: loginData.nombre, date: "", time: "", phone: "" });
     setNotification("Cita reservada con éxito.");
     setTimeout(() => setNotification(""), 3000);
   };
@@ -80,6 +108,48 @@ function App() {
       section.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="App">
+        <header className="App-header">
+          <h1>Ingreso a Gestión de Citas Médicas</h1>
+        </header>
+        <main>
+          <form
+            onSubmit={handleLoginSubmit}
+            className="card"
+            style={{ maxWidth: 350, margin: "40px auto" }}
+          >
+            <div>
+              <label htmlFor="cedula">Cédula:</label>
+              <input
+                type="text"
+                id="cedula"
+                name="cedula"
+                value={loginData.cedula}
+                onChange={handleLoginChange}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="nombre">Nombre:</label>
+              <input
+                type="text"
+                id="nombre"
+                name="nombre"
+                value={loginData.nombre}
+                onChange={handleLoginChange}
+                required
+              />
+            </div>
+            {loginError && <p className="error">{loginError}</p>}
+            <button type="submit">Ingresar</button>
+          </form>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
@@ -115,6 +185,7 @@ function App() {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                readOnly
               />
               {errors.name && <p className="error">{errors.name}</p>}
             </div>
