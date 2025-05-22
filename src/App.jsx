@@ -115,9 +115,14 @@ function App() {
   };
 
   const scheduleReminder = (appointment) => {
-    alert(
-      `Recordatorio: Tienes una cita programada para ${appointment.name} el ${appointment.date} a las ${appointment.time}.`
-    );
+    // Asegúrate de que el número tenga el código de país, por ejemplo "57" para Colombia
+    const phoneWithCountry = appointment.phone.startsWith("57")
+      ? appointment.phone
+      : "57" + appointment.phone;
+
+    const message = `Hola ${appointment.name}, te recordamos tu cita médica el ${appointment.date} a las ${appointment.time}.`;
+    const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
   };
 
   const deleteAppointment = (index) => {
